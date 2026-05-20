@@ -14,10 +14,9 @@ messages, and they're designed to live in the same backing store.
 
 ## Status
 
-🚧 **Pre-alpha.** v0.1 ships the shared-storage transport (S3, local FS,
-Redis, Postgres). v0.2+ adds realtime delivery and federated HTTP for
-cross-organization flows. Protocol and APIs will break before 1.0. Star
-the repo to follow along.
+✅ **v0.1.0 shipped.** Local SQLite-backed transport, full SDK + CLI
+(`send / recv / ack / ls / inbox-uri`), 27 passing tests. Protocol and
+APIs may break before 1.0. Star the repo to follow along.
 
 ## Why this exists
 
@@ -108,14 +107,71 @@ Notes:
 
 ## v0.1 roadmap
 
-- [ ] `core.py` — `Message`, `AgentMail` facade, URI parser
-- [ ] `LocalProvider` — single-machine SQLite backed inbox/outbox
-- [ ] `S3Provider` — shared bucket; works with any S3-compatible storage
-- [ ] CLI — `agent-mail send | recv | ack | ls`
-- [ ] Python SDK — `mail.send()`, `mail.recv()`, `mail.request()`
-- [ ] Test suite — round-trip, ack semantics, TTL, RBAC
+- [x] `core.py` — `Message`, `AgentMail` facade, URI parser
+- [x] `LocalProvider` — single-machine SQLite-backed inbox/outbox (WAL, visibility timeout, explicit ack)
+- [x] CLI — `agent-mail send | recv | ack | ls | inbox-uri`
+- [x] Python SDK — `mail.send()`, `mail.recv()`, `mail.ack()`, `mail.ls()`
+- [x] Test suite — round-trip, ack semantics, visibility timeout, channel/inbox isolation, attachments
+- [ ] `S3Provider` — shared bucket for multi-machine setups *(next)*
 - [ ] Hermes Agent skill + native tool wrappers
 - [ ] Worked example: planner ↔ worker passing a file via agent-drive
+
+## Install
+
+```bash
+pip install agent-mail
+```
+
+## Quickstart — CLI
+
+```bash
+export AGENT_MAIL_LOCAL_DIR=./mailbox
+
+# alice sends a task to bob, with an agent-drive file as attachment
+agent-mail send bob \
+  --as alice \
+  -s "ETL job" -b "Run pipeline on attached file" \
+  -a agentdrive://s3/handoffs/alice/data.csv
+# → agentmail://local/bob/inbox/msg_1779...
+
+# bob inspects his inbox
+agent-mail ls --as bob
+agent-mail recv --as bob --limit 5
+
+# bob acknowledges (removes from queue)
+agent-mail ack <msg_id> --as bob
+```
+
+Set `AGENT_MAIL_IDENTITY=bob` once and drop the `--as bob` from every
+command.
+
+## Quickstart — Python SDK
+
+```python
+from agent_mail import AgentMail, LocalProvider
+
+provider = LocalProvider("./mailbox")
+
+alice = AgentMail(provider, identity="alice")
+bob   = AgentMail(provider, identity="bob")
+
+# 1. fire-and-forget
+alice.send(
+    to="bob",
+    subject="ETL job",
+    body="Run pipeline on attached file",
+    attachments=["agentdrive://s3/handoffs/alice/data.csv"],
+)
+
+# 2. drain the inbox, ack as you go
+for msg in bob.recv(limit=10):
+    print(msg.from_, msg.subject, msg.attachments)
+    bob.ack(msg.id)
+```
+
+**Visibility timeout (SQS-style):** `recv()` flips messages to *in-flight*
+for 60 seconds. If you don't `ack()` before then, they reappear — so
+crashed agents never silently drop work.
 
 ## Later (v0.2+)
 
@@ -127,11 +183,6 @@ Notes:
   cross-organization agent communication.
 - A2A schema profile (so A2A messages ride this transport)
 - Adapters for AutoGen, crewAI, MCP
-
-## Install
-
-Coming soon to PyPI as `agent-mail`. The repo is intentionally minimal
-right now — this README is the design contract, code lands next.
 
 ## License
 

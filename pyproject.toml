@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-mail"
-version = "0.1.0.dev0"
+version = "0.1.0"
 authors = [
   { name = "Xinsong Li", email = "lixinso@gmail.com" },
 ]
@@ -12,7 +12,7 @@ description = "Identity-aware async message bus for AI agents."
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
