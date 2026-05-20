@@ -44,3 +44,7 @@ htmlcov/
 # Coverage reports
 coverage.xml
 *.cover
+
+# agent-mail working directories (test residue, runtime mailboxes)
+mailbox/
+mailbox-*/
