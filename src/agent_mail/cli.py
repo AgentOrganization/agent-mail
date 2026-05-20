@@ -9,7 +9,11 @@ from typing import Optional
 
 from agent_mail import __version__
 from agent_mail.core import DEFAULT_CHANNEL, build_uri, parse_uri
-from agent_mail.providers import get_provider_for_scheme, ProviderConfigError
+from agent_mail.providers import (
+    get_provider_for_scheme,
+    get_default_scheme,
+    ProviderConfigError,
+)
 
 
 def _identity(args_value: Optional[str]) -> str:
@@ -21,7 +25,8 @@ def _identity(args_value: Optional[str]) -> str:
     return who
 
 
-def _provider(scheme: str = "local"):
+def _provider(scheme: Optional[str] = None):
+    scheme = scheme or get_default_scheme()
     try:
         return get_provider_for_scheme(scheme)
     except ProviderConfigError as exc:
@@ -119,7 +124,7 @@ def cmd_ls(args) -> int:
 
 def cmd_inbox_uri(args) -> int:
     who = _identity(args.as_)
-    print(build_uri("local", who, args.channel))
+    print(build_uri(get_default_scheme(), who, args.channel))
     return 0
 
 

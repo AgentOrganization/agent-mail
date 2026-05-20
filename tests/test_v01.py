@@ -226,7 +226,10 @@ def test_cli_version():
 
 
 def test_cli_send_recv_ack_flow(tmp_path):
-    env = {"AGENT_MAIL_LOCAL_DIR": str(tmp_path)}
+    env = {
+        "AGENT_MAIL_SCHEME": "local",
+        "AGENT_MAIL_LOCAL_DIR": str(tmp_path),
+    }
     # alice sends to bob
     r = _cli(
         ["send", "bob", "-s", "ETL", "-b", "run it",
@@ -261,15 +264,23 @@ def test_cli_send_recv_ack_flow(tmp_path):
 
 
 def test_cli_inbox_uri():
-    r = _cli(["inbox-uri", "--as", "agent_007"])
+    r = _cli(["inbox-uri", "--as", "agent_007"],
+             env_extra={"AGENT_MAIL_SCHEME": "local"})
     assert r.stdout.strip() == "agentmail://local/agent_007/inbox"
 
 
 def test_cli_identity_env_var(tmp_path):
-    env = {"AGENT_MAIL_LOCAL_DIR": str(tmp_path), "AGENT_MAIL_IDENTITY": "alice"}
+    env = {
+        "AGENT_MAIL_SCHEME": "local",
+        "AGENT_MAIL_LOCAL_DIR": str(tmp_path),
+        "AGENT_MAIL_IDENTITY": "alice",
+    }
     _cli(["send", "bob", "-b", "hi"], env_extra=env)
     r = _cli(["ls", "--as", "bob", "--json"],
-             env_extra={"AGENT_MAIL_LOCAL_DIR": str(tmp_path)})
+             env_extra={
+                 "AGENT_MAIL_SCHEME": "local",
+                 "AGENT_MAIL_LOCAL_DIR": str(tmp_path),
+             })
     assert any("alice" in line for line in r.stdout.splitlines())
 
 

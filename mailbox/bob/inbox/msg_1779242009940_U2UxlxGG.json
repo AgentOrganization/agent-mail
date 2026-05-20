@@ -1,0 +1,1 @@
+{"attachments": ["agentdrive://local/alice/data.csv"], "body": "run it", "channel": "inbox", "correlation_id": null, "created_at": "2026-05-20T01:53:29+00:00", "from": "alice", "id": "msg_1779242009940_U2UxlxGG", "protocol_version": "1", "reply_to": null, "subject": "ETL", "to": "bob", "ttl_seconds": null, "type": "request"}
